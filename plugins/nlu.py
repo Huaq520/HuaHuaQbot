@@ -441,7 +441,8 @@ async def cmd_status(rest: str, uid: int, gid: int, ats=None) -> str:
         f"{persona_line}\n"
         f"白名单 群{len(wl['groups'])} 人{len(wl['users'])} "
         f"黑名单 群{len(bl['groups'])} 人{len(bl['users'])}\n"
-        f"记忆 {len(memory.list_files())} 份 表情 {sticker_count} 张 活跃 {len(wake)}"
+        f"记忆 {len(memory.list_files())} 份 表情 {sticker_count} 张 活跃 {len(wake)}\n"
+        f"DSH {'已装' if coder.available() else '未装（/dsh 不可用）'}"
     )
 
 
@@ -995,6 +996,8 @@ def _dsh_sessions(limit: int = 5) -> List[str]:
 async def cmd_dsh_session(rest: str, uid: int, gid: int) -> str:
     if int(uid) != admins.OWNER:
         return "这个只有主人能用"
+    if not coder.available():
+        return "这台机器没装 DSH"
     sid = settings.dsh_session()
     return f"当前 DSH 会话\n{sid}" if sid else "还没有 DSH 会话 下一条 /dsh 会自动开一个"
 
@@ -1002,6 +1005,8 @@ async def cmd_dsh_session(rest: str, uid: int, gid: int) -> str:
 async def cmd_dsh_switch(rest: str, uid: int, gid: int) -> str:
     if int(uid) != admins.OWNER:
         return "这个只有主人能用"
+    if not coder.available():
+        return "这台机器没装 DSH"
     sid = rest.strip()
     if not sid:
         sessions = _dsh_sessions()
@@ -1024,6 +1029,8 @@ async def cmd_dsh_switch(rest: str, uid: int, gid: int) -> str:
 async def cmd_dsh_new(rest: str, uid: int, gid: int) -> str:
     if int(uid) != admins.OWNER:
         return "这个只有主人能用"
+    if not coder.available():
+        return "这台机器没装 DSH"
     settings.clear_dsh_session()
     return "已清空 下一条 /dsh 会开新会话"
 

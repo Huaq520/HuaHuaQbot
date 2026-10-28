@@ -4,14 +4,22 @@
 import asyncio
 import json
 import os
+import shutil
 from typing import Optional, Tuple
 
 from nonebot import get_driver, logger
 
-WORKDIR = "/root/大肥鱼"
+WORKDIR = os.environ.get("DSH_WORKDIR", "/root/大肥鱼")
+
+
+def available() -> bool:
+    """DSH 是可选的 没装就不提供 /dsh。"""
+    return shutil.which("dsh") is not None
 
 
 async def _run(prompt: str, session_id: Optional[str], timeout: int) -> Tuple[str, Optional[str], Optional[str]]:
+    if not available():
+        return "", None, MISSING_HINT
     env = os.environ.copy()
     env["DEEPSEEK_API_KEY"] = str(getattr(get_driver().config, "deepseek_api_key", ""))
 
@@ -72,9 +80,18 @@ async def _run(prompt: str, session_id: Optional[str], timeout: int) -> Tuple[st
     return "", sid, f"跑完了 没输出（退出码 {proc.returncode}）{(' ' + tail) if tail else ''}"
 
 
+MISSING_HINT = (
+    "这台机器没装 DSH 所以 /dsh 用不了\n"
+    "装法见 README 的「DSH 集成（可选）」一节 或者直接找主人"
+)
+
+
 async def run_task(
     prompt: str, session_id: Optional[str] = None, timeout: int = 900
 ) -> Tuple[str, Optional[str], bool]:
+    if not available():
+        return MISSING_HINT, session_id, False
+
     text, sid, err = await _run(prompt, session_id, timeout)
 
     # 会话被别的进程占着 就开个新的重跑
