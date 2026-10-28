@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# 大肥鱼机器人统一开关
+set -uo pipefail
+
+NAP=nc_1940652180
+BOT=nb-bot
+TOKEN=$(grep -oP 'ONEBOT_ACCESS_TOKEN="\K[^"]+' /root/nb_bot/.env 2>/dev/null || echo napcat_token_2026)
+
+c_green=$'\033[32m'; c_red=$'\033[31m'; c_dim=$'\033[2m'; c_off=$'\033[0m'
+
+ok()   { echo "${c_green}✔${c_off} $*"; }
+bad()  { echo "${c_red}✘${c_off} $*"; }
+dim()  { echo "${c_dim}$*${c_off}"; }
+
+wait_port() {  # 端口 超时
+  local port=$1 timeout=${2:-60} i=0
+  while (( i < timeout )); do
+    ss -tln 2>/dev/null | grep -q ":$port " && return 0
+    sleep 1; ((i++))
+  done
+  return 1
+}
+
+wait_ws() {
+  local timeout=${1:-40} i=0
+  while (( i < timeout )); do
+    [[ $(ss -tn 2>/dev/null | grep -c ':8080') -ge 2 ]] && return 0
+    sleep 1; ((i++))
+  done
+  return 1
+}
+
+status() {
+  local nst bst qq
+  nst=$(systemctl is-active $NAP 2>/dev/null)
+  bst=$(systemctl is-active $BOT 2>/dev/null)
+  echo "NapCat   : $nst"
+  echo "机器人   : $bst"
+  if [[ "$nst" == "active" ]]; then
+    if wait_port 3000 2; then
+      qq=$(curl -s --max-time 3 -X POST http://127.0.0.1:3000/get_login_info \
+            -H "Authorization: Bearer $TOKEN" -d '{}' \
+            | grep -oP '"nickname":"\K[^"]*|"user_id":\K[0-9]+' | paste -sd' ' -)
+      echo "登录账号 : ${qq:-未知}"
+    else
+      bad "NapCat 在跑但 HTTP 接口没起来"
+    fi
+  fi
+  if [[ "$bst" == "active" ]]; then
+    if [[ $(ss -tn 2>/dev/null | grep -c ':8080') -ge 2 ]]; then
+      ok "WebSocket 已连接"
+    else
+      bad "机器人在跑但没连上 NapCat"
+    fi
+  fi
+}
+
+start() {
+  echo "启动 NapCat ..."
+  systemctl start $NAP
+  if wait_port 3000 60; then
+    ok "NapCat 就绪（HTTP 3000 / WebUI 6099）"
+  else
+    bad "NapCat 60 秒内没起来，可能需要扫码登录"
+    dim "打开 http://202.189.15.67:6099/webui 扫码后再执行 dfy start"
+    return 1
+  fi
+
+  echo "启动机器人 ..."
+  systemctl start $BOT
+  if wait_ws 40; then
+    ok "机器人已连上 NapCat"
+  else
+    bad "机器人起来了但没连上，看日志：dfy log"
+  fi
+  echo
+  status
+}
+
+stop() {
+  echo "停止机器人 ..."
+  systemctl stop $BOT 2>/dev/null
+  echo "停止 NapCat ..."
+  systemctl stop $NAP 2>/dev/null
+  sleep 1
+  ok "全部已停止"
+}
+
+case "${1:-start}" in
+  start)   start ;;
+  stop)    stop ;;
+  restart) stop; sleep 1; start ;;
+  status)  status ;;
+  log)     journalctl -u $BOT -n 120 --no-pager -f ;;
+  naplog)  journalctl -u $NAP -n 120 --no-pager -f ;;
+  *) echo "用法: dfy {start|stop|restart|status|log|naplog}"; exit 2 ;;
+esac

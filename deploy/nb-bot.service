@@ -1,0 +1,16 @@
+[Unit]
+Description=Huahua QQ Bot (NoneBot2)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 改成实际代码目录
+WorkingDirectory=/opt/huahuaQbot
+ExecStart=/opt/huahuaQbot/.venv/bin/python bot.py
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target

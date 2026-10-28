@@ -1,0 +1,16 @@
+[Unit]
+Description=NapCat for QQ (OneBot v11)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root
+# 把 <QQ号> 全部替换成实际 QQ 号
+ExecStart=/bin/bash -lc 'mkdir -p "/root/Napcat/log" "/root/Napcat/run"; exec xvfb-run -a "/root/Napcat/opt/QQ/qq" --no-sandbox -q "<QQ号>" >> "/root/Napcat/log/napcat_<QQ号>.log" 2>&1'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
