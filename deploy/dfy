@@ -62,7 +62,7 @@ start() {
     ok "NapCat 就绪（HTTP 3000 / WebUI 6099）"
   else
     bad "NapCat 60 秒内没起来，可能需要扫码登录"
-    dim "打开 http://202.189.15.67:6099/webui 扫码后再执行 dfy start"
+    dim "打开 http://<你的服务器IP>:6099/webui 扫码后再执行 dfy start"
     return 1
   fi
 

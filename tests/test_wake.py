@@ -17,7 +17,7 @@ class Ev:
 
 async def main():
     ok = []
-    gid, uid = 367422773, 2821502878
+    gid, uid = 100001, 1000001
 
     ok.append(ai.wake_active(gid, uid) is False)
     print("未唤醒时 wake_active =", ai.wake_active(gid, uid))

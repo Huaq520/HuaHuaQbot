@@ -36,10 +36,10 @@ async def case(name, ev, expect_block):
 
 async def main():
     results = []
-    results.append(await case("白名单群 367422773", Ev(group_id=367422773, user_id=1), False))
+    results.append(await case("白名单群 100001", Ev(group_id=100001, user_id=1), False))
     results.append(await case("其它群 123456", Ev(group_id=123456, user_id=1), True))
-    results.append(await case("管理员私聊 2821502878", Ev(user_id=2821502878), False))
-    results.append(await case("白名单私聊 551307370", Ev(user_id=551307370), False))
+    results.append(await case("管理员私聊 1000001", Ev(user_id=1000001), False))
+    results.append(await case("白名单私聊 1000002", Ev(user_id=1000002), False))
     results.append(await case("陌生人私聊 111", Ev(user_id=111), True))
     results.append(await case("元事件", Ev(t="meta_event", user_id=1), False))
 
