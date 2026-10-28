@@ -94,7 +94,7 @@ async def _say(uid: int, gid: int, text: str) -> None:
 
 
 # ---------- 基础 ----------
-USER_CMDS = {"帮助", "我是谁", "好感", "人格", "切换人格"}
+USER_CMDS = {"帮助", "好感", "人格", "切换人格"}
 
 
 def _level(uid: int) -> str:
@@ -105,7 +105,7 @@ def _level(uid: int) -> str:
 
 # 帮助菜单的元数据：类别, 展示用法, 最低权限
 HELP_ITEMS = [
-    ("基础", "/帮助（/help 也行） /我是谁 /好感 QQ", "user"),
+    ("基础", "/帮助（/help 也行） /好感 QQ", "user"),
     ("人格", "/人格 /切换人格 [全局]（弹菜单选）", "user"),
     ("人格", "/有哪些人格 /设人格 内容 /设全局人格 内容（主人）", "admin"),
     ("模型", "/模型（菜单选） /推理 low|high|max /联网 on|off /状态", "admin"),
@@ -1097,7 +1097,7 @@ COMMANDS: Dict[str, Callable] = {
     "加群": cmd_wl, "加人": cmd_wl, "删群": cmd_wl_del, "删人": cmd_wl_del,
     "黑名单": cmd_bl, "黑名单删": cmd_bl_del,
     "拉黑": cmd_bl, "解黑": cmd_bl_del,
-    "会话": cmd_sessions, "活跃": cmd_wake, "我是谁": cmd_whoami,
+    "会话": cmd_sessions, "活跃": cmd_wake,
     "好感": cmd_affinity,
     "有哪些人格": cmd_personas, "切换人格": cmd_switch_persona,
     "人格": cmd_show_persona, "设人格": cmd_set_persona,
@@ -1212,7 +1212,6 @@ USER_HELP = (
     "· 直接说话 我就陪你聊\n"
     "· 群里 @我 唤醒后 5 分钟内都能聊\n"
     "· 发图 / 表情包 我也能看\n"
-    "· /我是谁 看自己的号\n"
     "· /好感 看我对你的好感度\n"
     "· /人格 看我现在的设定\n"
     "· /切换人格 换成预制人格\n"
