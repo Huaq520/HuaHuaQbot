@@ -6,6 +6,7 @@
 """
 
 import asyncio
+import datetime
 import json
 import random
 import time
@@ -30,6 +31,48 @@ _last_sent = 0.0
 _next_at = 0.0
 _opener: dict = {}      # 群号 -> 刚发的那句话
 MUTE_HOURS = 24
+try:
+    from zoneinfo import ZoneInfo
+    TZ = ZoneInfo("Asia/Shanghai")
+except Exception:  # noqa: BLE001
+    TZ = datetime.timezone(datetime.timedelta(hours=8))
+
+# 只在这个时间段内主动说话（本地时区）
+DAY_START = "07:30"
+DAY_END = "24:00"
+# 白天这几小时更活跃，间隔打折
+ACTIVE_START = "08:00"
+ACTIVE_END = "23:00"
+ACTIVE_FACTOR = 0.6
+
+
+def _hm(now: datetime.datetime, text: str) -> int:
+    """把 07:30 / 24:00 这种转成当天的分钟数。"""
+    if text == "24:00":
+        return 24 * 60
+    h, m = text.split(":")
+    return int(h) * 60 + int(m)
+
+
+def _in_window(now: datetime.datetime, start: str, end: str) -> bool:
+    cur = now.hour * 60 + now.minute
+    a, b = _hm(now, start), _hm(now, end)
+    if a <= b:
+        return a <= cur < b
+    return cur >= a or cur < b
+
+
+def _can_speak(now: datetime.datetime) -> bool:
+    return _in_window(now, DAY_START, DAY_END)
+
+
+def _base_seconds() -> float:
+    """白天更频繁，夜里（窗口内）慢一些。"""
+    now = datetime.datetime.now(TZ)
+    base = settings.proactive_interval() * 60
+    if _in_window(now, ACTIVE_START, ACTIVE_END):
+        base *= ACTIVE_FACTOR
+    return base
 
 
 def _load_state() -> None:
@@ -129,7 +172,10 @@ async def _tick() -> None:
     if not settings.proactive():
         return
     now = time.time()
-    base = settings.proactive_interval() * 60
+    local = datetime.datetime.now(TZ)
+    if not _can_speak(local):
+        return
+    base = _base_seconds()
     if _next_at == 0:
         _next_at = now + base * random.uniform(0.5, 1.5)
         return

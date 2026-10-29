@@ -802,7 +802,7 @@ async def _handle_ai(event: MessageEvent, text: str = EventPlainText()) -> None:
         hint = f"现在和你说话的是 {who} 直接回他就行"
         if ats:
             hint += f" 对方@了这些人: {', '.join(ats)}"
-        recent = _recent_lines(int(group_id))
+        recent = _recent_lines(int(group_id), exclude=f"{_sender_hint(event)}: {event.get_plaintext().strip()[:120]}")
         if recent:
             hint += "\n群里刚才在聊（从上到下 最后一条最近）：\n" + recent
 
@@ -864,15 +864,17 @@ async def _handle_ai(event: MessageEvent, text: str = EventPlainText()) -> None:
     await ai_chat.finish()
 
 
-def _recent_lines(gid: int, limit: int = 8) -> str:
+def _recent_lines(gid: int, limit: int = 10, exclude: str = "") -> str:
     dq = _RECENT.get(gid)
     if not dq:
         return ""
     lines = list(dq)[-limit:]
-    return "\n".join(lines)
+    if exclude and lines and lines[-1] == exclude:
+        lines = lines[:-1]
+    return "\n".join(lines[-limit:])
 
 
-recorder = on_message(priority=60, block=False)
+recorder = on_message(priority=1, block=False)
 
 
 @recorder.handle()
